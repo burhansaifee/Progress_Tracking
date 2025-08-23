@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from './firebase/config';
 import {
-    collection, addDoc, onSnapshot, query, where, doc, deleteDoc, writeBatch, getDocs, setDoc, getDoc, updateDoc
+    collection, addDoc, onSnapshot, query, where, doc, deleteDoc, writeBatch, getDocs, setDoc, getDoc, updateDoc, arrayUnion
 } from 'firebase/firestore';
 import { uploadImage } from './services/imageUploader';
 import Auth from './components/Auth';
@@ -16,6 +16,7 @@ import TaskCompletionForm from './components/TaskCompletionForm';
 import PublicTaskView from './components/PublicTaskView';
 import Friends from './components/Friends';
 import FriendProgressView from './components/FriendProgressView';
+import ShareTaskModal from './components/ShareTaskModal';
 import './App.css';
 
 function App() {
@@ -27,7 +28,7 @@ function App() {
     const [isAuthReady, setIsAuthReady] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [appId] = useState('default-app-id');
+    const appId = 'default-app-id';
     const [taskDefinitions, setTaskDefinitions] = useState([]);
     const [selectedTask, setSelectedTask] = useState(null);
     const [completions, setCompletions] = useState([]);
@@ -35,6 +36,7 @@ function App() {
     const [modalCompletions, setModalCompletions] = useState(null);
     const [friends, setFriends] = useState([]);
     const [selectedFriend, setSelectedFriend] = useState(null);
+    const [sharingTask, setSharingTask] = useState(null);
 
     // --- Effect 1: Check for Share Link ---
     useEffect(() => {
@@ -268,6 +270,23 @@ function App() {
         alert("Task deleted successfully.");
     };
 
+    const handleShareTaskWithFriends = async (task, friendUids) => {
+        if (!user) return;
+        const sharedTaskRef = doc(db, `/artifacts/${appId}/users/${user.uid}/sharedTasks`, task.id);
+        const sharedTaskDoc = await getDoc(sharedTaskRef);
+
+        if (sharedTaskDoc.exists()) {
+            await updateDoc(sharedTaskRef, {
+                sharedWith: arrayUnion(...friendUids)
+            });
+        } else {
+            await setDoc(sharedTaskRef, {
+                sharedWith: friendUids
+            });
+        }
+        alert(`Task shared with ${friendUids.length} friend(s).`);
+    };
+
 
     const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
     const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
@@ -290,7 +309,7 @@ function App() {
                 <>
                     <Header user={user} />
                      {selectedFriend ? (
-                        <FriendProgressView friend={selectedFriend} onBack={() => setSelectedFriend(null)} />
+                        <FriendProgressView friend={selectedFriend} onBack={() => setSelectedFriend(null)} currentUserId={user.uid} />
                     ) : (
                     <main className="main-content-split">
 
@@ -302,6 +321,7 @@ function App() {
                                 selectedTaskId={selectedTask?.id}
                                 onShareTask={handleShareTask}
                                 onDeleteTask={handleDeleteTask}
+                                onShareWithFriend={(task) => setSharingTask(task)}
                             />
                             <Friends
                                 friends={friends}
@@ -319,7 +339,6 @@ function App() {
                                         onAddCompletion={handleAddCompletion}
                                         isLoading={isLoading}
                                         error={error}
-                                        taskName={selectedTask.name}
                                     />
                                     <div className="card">
                                         <div className="calendar-main-header">
@@ -353,6 +372,14 @@ function App() {
             )}
 
             {user && <Modal completions={modalCompletions} onClose={() => setModalCompletions(null)} />}
+            {sharingTask && (
+                <ShareTaskModal
+                    friends={friends}
+                    task={sharingTask}
+                    onShare={handleShareTaskWithFriends}
+                    onClose={() => setSharingTask(null)}
+                />
+            )}
             {error && <p className="error-message global-error" onClick={() => setError('')}>{error}</p>}
         </div>
     );

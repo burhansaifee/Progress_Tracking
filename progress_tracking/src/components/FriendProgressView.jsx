@@ -1,35 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, doc, getDoc, query, where } from 'firebase/firestore';
 import Calendar from './Calendar';
 import TaskGallery from './TaskGallery';
 import Modal from './Modal';
 import TaskList from './TaskList';
 
-function FriendProgressView({ friend, onBack }) {
+function FriendProgressView({ friend, onBack, currentUserId }) {
     const [tasks, setTasks] = useState([]);
     const [selectedTask, setSelectedTask] = useState(null);
     const [completions, setCompletions] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [modalCompletions, setModalCompletions] = useState(null);
 
-    // Fetch friend's tasks
+    // Fetch friend's shared tasks
     useEffect(() => {
-        if (!friend) return;
-        const tasksDefPath = `/artifacts/default-app-id/users/${friend.uid}/taskDefinitions`;
-        const q = query(collection(db, tasksDefPath));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const friendTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (!friend || !currentUserId) return;
+        
+        const sharedTasksRef = collection(db, `/artifacts/default-app-id/users/${friend.uid}/sharedTasks`);
+        const unsubscribe = onSnapshot(sharedTasksRef, async (snapshot) => {
+            const sharedTasksPromises = snapshot.docs.map(async (sharedDoc) => {
+                if (sharedDoc.data().sharedWith.includes(currentUserId)) {
+                    const taskDocRef = doc(db, `/artifacts/default-app-id/users/${friend.uid}/taskDefinitions`, sharedDoc.id);
+                    const taskDoc = await getDoc(taskDocRef);
+                    if(taskDoc.exists()){
+                         return { id: taskDoc.id, ...taskDoc.data() };
+                    }
+                }
+                return null;
+            });
+
+            const friendTasks = (await Promise.all(sharedTasksPromises)).filter(Boolean);
             friendTasks.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
             setTasks(friendTasks);
+
             if (friendTasks.length > 0) {
                 setSelectedTask(friendTasks[0]);
             } else {
                 setSelectedTask(null);
             }
         });
+
         return () => unsubscribe();
-    }, [friend]);
+    }, [friend, currentUserId]);
 
     // Fetch completions for selected task
     useEffect(() => {
@@ -67,7 +80,9 @@ function FriendProgressView({ friend, onBack }) {
                         tasks={tasks}
                         onSelectTask={setSelectedTask}
                         selectedTaskId={selectedTask?.id}
-                        onShareTask={() => {}} // No sharing from friend's view
+                        onShareTask={() => {}}
+                        onDeleteTask={() => {}}
+                        onShareWithFriend={() => {}}
                     />
                 </aside>
                 <section className="task-detail-view">
@@ -94,7 +109,7 @@ function FriendProgressView({ friend, onBack }) {
                     </>
                 ) : (
                     <div className="card empty-state">
-                       <h2>{friend.nickname || friend.email} has no tasks yet.</h2>
+                       <h2>{friend.nickname || friend.email} has no shared tasks.</h2>
                     </div>
                 )}
                 </section>
