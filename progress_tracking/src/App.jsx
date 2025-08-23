@@ -339,6 +339,7 @@ function App() {
                                         onAddCompletion={handleAddCompletion}
                                         isLoading={isLoading}
                                         error={error}
+                                        taskName={selectedTask.name} 
                                     />
                                     <div className="card">
                                         <div className="calendar-main-header">
