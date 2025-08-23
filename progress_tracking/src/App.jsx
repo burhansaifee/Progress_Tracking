@@ -1,74 +1,112 @@
 import React, { useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
-import { getFirestore, collection, addDoc, onSnapshot, query, where } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
 import { db } from './firebase/config';
 import { uploadImage } from './services/imageUploader';
-import { formatDate } from './utils/formatDate';
 
-import CustomCalendarHeatmap from './components/CustomCalendarHeatmap';
+import Auth from './components/Auth';
+import Header from './components/Header';
+import Calendar from './components/Calendar';
+import Modal from './components/Modal';
 import TaskGallery from './components/TaskGallery';
 import TaskCreator from './components/TaskCreator';
 import TaskList from './components/TaskList';
 import TaskCompletionForm from './components/TaskCompletionForm';
+import PublicTaskView from './components/PublicTaskView';
 
 import './App.css';
 
 function App() {
-    // State for user, loading, and errors
+    // --- State Management ---
+    const [isPublicView, setIsPublicView] = useState(false);
+    const [publicData, setPublicData] = useState(null);
+    const [isPublicLoading, setIsPublicLoading] = useState(true);
     const [user, setUser] = useState(null);
+    const [isAuthReady, setIsAuthReady] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [appId] = useState('default-app-id');
-
-    // State for managing multiple tasks
     const [taskDefinitions, setTaskDefinitions] = useState([]);
     const [selectedTask, setSelectedTask] = useState(null);
     const [completions, setCompletions] = useState([]);
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [modalCompletions, setModalCompletions] = useState(null);
 
-    // --- Authentication ---
+    // --- Effect 1: Check for Share Link ---
     useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const shareId = urlParams.get('shareId');
+
+        if (shareId) {
+            setIsPublicView(true);
+            const fetchPublicData = async () => {
+                try {
+                    const publicTaskDocRef = doc(db, `/artifacts/${appId}/public/data/publicTasks`, shareId);
+                    const completionsCollRef = collection(db, `/artifacts/${appId}/public/data/publicTasks/${shareId}/completions`);
+
+                    const docSnap = await getDocs(query(collection(db, `/artifacts/${appId}/public/data/publicTasks`)));
+                    const taskDoc = docSnap.docs.find(d => d.id === shareId);
+
+                    if (taskDoc && taskDoc.exists()) {
+                        const taskData = taskDoc.data();
+                        const completionsSnapshot = await getDocs(completionsCollRef);
+                        const completionsData = completionsSnapshot.docs.map(d => ({ ...d.data(), date: d.data().date.toDate() }));
+                        
+                        setPublicData({ ...taskData, completions: completionsData });
+                    } else {
+                        setPublicData(null);
+                    }
+                } catch (err) {
+                    console.error("Error fetching public data:", err);
+                    setPublicData(null);
+                } finally {
+                    setIsPublicLoading(false);
+                }
+            };
+            
+            fetchPublicData();
+        } else {
+            setIsPublicView(false);
+            setIsPublicLoading(false);
+        }
+    }, [appId]);
+
+    // --- Effect 2: Authentication ---
+    useEffect(() => {
+        if (isPublicView) return;
         const auth = getAuth();
-        const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-            if (currentUser) {
-                setUser(currentUser);
-            } else {
-                signInAnonymously(auth).catch((err) => setError("Authentication failed."));
-            }
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setIsAuthReady(true);
         });
-        return () => unsubscribeAuth();
-    }, []);
+        return () => unsubscribe();
+    }, [isPublicView]);
 
-    // --- Fetch Task Definitions ---
+    // --- Effect 3: Fetch Task Definitions ---
     useEffect(() => {
-        if (!user) return;
-
+        if (!isAuthReady || !user) {
+            setTaskDefinitions([]);
+            setSelectedTask(null);
+            return;
+        }
         const tasksDefPath = `/artifacts/${appId}/users/${user.uid}/taskDefinitions`;
-        // **FIX:** Removed the orderBy clause from the query
         const q = query(collection(db, tasksDefPath));
-
-        const unsubscribeTasks = onSnapshot(q, (snapshot) => {
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // **FIX:** Sort the tasks here in the code instead of in the query
             tasks.sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
             setTaskDefinitions(tasks);
-        }, (err) => {
-            console.error("Error fetching task definitions:", err);
-            setError("Could not fetch the list of tasks.");
         });
-
-        return () => unsubscribeTasks();
-    }, [user, appId]);
+        return () => unsubscribe();
+    }, [isAuthReady, user, appId]);
     
-    // --- Fetch Completions for the SELECTED task ---
+    // --- Effect 4: Fetch Completions ---
     useEffect(() => {
         if (!user || !selectedTask) {
             setCompletions([]);
             return;
         };
-
         const completionsPath = `/artifacts/${appId}/users/${user.uid}/tasks`;
         const q = query(collection(db, completionsPath), where('taskDefinitionId', '==', selectedTask.id));
-        
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedCompletions = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -77,7 +115,6 @@ function App() {
             }));
             setCompletions(fetchedCompletions);
         });
-
         return () => unsubscribe();
     }, [user, selectedTask, appId]);
 
@@ -85,10 +122,7 @@ function App() {
     const handleCreateTask = async (taskName) => {
         if (!user) return;
         const tasksDefPath = `/artifacts/${appId}/users/${user.uid}/taskDefinitions`;
-        await addDoc(collection(db, tasksDefPath), {
-            name: taskName,
-            createdAt: new Date(),
-        });
+        await addDoc(collection(db, tasksDefPath), { name: taskName, createdAt: new Date() });
     };
 
     const handleAddCompletion = async (description, image) => {
@@ -104,70 +138,112 @@ function App() {
                 imageUrl: imageUrl,
                 date: new Date(),
             });
-        } catch (err) {
-            setError(`Failed to log completion: ${err.message}`);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    
-    // Prepare data for the heatmap
-    const getHeatmapData = () => {
-        const counts = completions.reduce((acc, task) => {
-            const dateStr = formatDate(task.date);
-            acc[dateStr] = (acc[dateStr] || 0) + 1;
-            return acc;
-        }, {});
-        return Object.keys(counts).map(date => ({ date, count: counts[date] }));
+        } catch (err) { setError(`Failed to log completion: ${err.message}`); } 
+        finally { setIsLoading(false); }
     };
 
-    const today = new Date();
-    const oneYearAgo = new Date(new Date().setFullYear(today.getFullYear() - 1));
+    const handleDeleteCompletion = async (completionId) => {
+        if (!user) return;
+        const completionDocRef = doc(db, `/artifacts/${appId}/users/${user.uid}/tasks`, completionId);
+        await deleteDoc(completionDocRef);
+    };
+
+    const handleShareTask = async (task) => {
+        if (!user) return;
+        const batch = writeBatch(db);
+        const publicTaskColRef = collection(db, `/artifacts/${appId}/public/data/publicTasks`);
+        const newPublicDocRef = doc(publicTaskColRef);
+        batch.set(newPublicDocRef, {
+            ownerId: user.uid, ownerEmail: user.email,
+            taskDefinitionId: task.id, taskName: task.name,
+            createdAt: new Date()
+        });
+        const completionsToCopy = completions.filter(c => c.taskDefinitionId === task.id);
+        completionsToCopy.forEach(comp => {
+            const newCompletionRef = doc(collection(newPublicDocRef, 'completions'));
+            batch.set(newPublicDocRef, comp);
+        });
+        await batch.commit();
+        const shareUrl = `${window.location.origin}${window.location.pathname}?shareId=${newPublicDocRef.id}`;
+        try {
+            await navigator.clipboard.writeText(shareUrl);
+            alert(`Share link copied to clipboard!\n\n${shareUrl}`);
+        } catch (err) {
+            prompt("Please copy this link:", shareUrl);
+        }
+    };
+
+    const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+
+    // --- **FIXED** Render Logic ---
+    if (isPublicView) {
+        if (isPublicLoading) {
+            return <div className="loading-screen">Loading Shared Progress...</div>;
+        }
+        return <PublicTaskView publicData={publicData} />;
+    }
+
+    if (!isAuthReady) {
+        return <div className="loading-screen">Loading TaskFlow...</div>;
+    }
 
     return (
         <div className="app-container">
-            <header className="app-header">
-                <h1>TaskFlow</h1>
-                <p>Define your tasks and track your progress for each one.</p>
-            </header>
-
-            <main className="main-content-split">
-                <aside className="sidebar">
-                    <TaskCreator onTaskCreate={handleCreateTask} />
-                    <TaskList 
-                        tasks={taskDefinitions} 
-                        onSelectTask={setSelectedTask} 
-                        selectedTaskId={selectedTask?.id}
-                    />
-                </aside>
-                
-                <section className="task-detail-view">
-                    {selectedTask ? (
-                        <>
-                            <TaskCompletionForm 
-                                onAddCompletion={handleAddCompletion}
-                                isLoading={isLoading}
-                                error={error}
-                                taskName={selectedTask.name}
+            {!user ? ( <Auth setError={setError} /> ) : (
+                <>
+                    <Header user={user} />
+                    <main className="main-content-split">
+                        <aside className="sidebar">
+                            <TaskCreator onTaskCreate={handleCreateTask} />
+                            <TaskList 
+                                tasks={taskDefinitions} 
+                                onSelectTask={setSelectedTask} 
+                                selectedTaskId={selectedTask?.id}
+                                onShareTask={handleShareTask}
                             />
-                            <div className="card">
-                                <h2 className="card-title">Progress Heatmap</h2>
-                                <CustomCalendarHeatmap
-                                    startDate={oneYearAgo}
-                                    endDate={today}
-                                    values={getHeatmapData()}
-                                />
-                            </div>
-                            <TaskGallery tasks={completions} />
-                        </>
-                    ) : (
-                        <div className="card empty-state">
-                           <h2>Select a task from the list to see your progress!</h2>
-                           <p>If you don't have any tasks yet, create one in the panel on the left.</p>
-                        </div>
-                    )}
-                </section>
-            </main>
+                        </aside>
+                        <section className="task-detail-view">
+                            {selectedTask ? (
+                                <>
+                                    <TaskCompletionForm 
+                                        onAddCompletion={handleAddCompletion}
+                                        isLoading={isLoading}
+                                        error={error}
+                                        taskName={selectedTask.name}
+                                    />
+                                    <div className="card">
+                                        <div className="calendar-main-header">
+                                            <button onClick={handlePrevMonth}>&larr;</button>
+                                            <h2 className="card-title">
+                                                {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                                            </h2>
+                                            <button onClick={handleNextMonth}>&rarr;</button>
+                                        </div>
+                                        <Calendar
+                                            currentDate={currentDate}
+                                            completions={completions}
+                                            onDayClick={setModalCompletions}
+                                        />
+                                    </div>
+                                    <TaskGallery 
+                                        tasks={completions} 
+                                        onDeleteCompletion={handleDeleteCompletion} 
+                                    />
+                                </>
+                            ) : (
+                                <div className="card empty-state">
+                                   <h2>Select a task from the list to see your progress!</h2>
+                                   <p>If you don't have any tasks yet, create one in the panel on the left.</p>
+                                </div>
+                            )}
+                        </section>
+                    </main>
+                </>
+            )}
+            
+            {user && <Modal completions={modalCompletions} onClose={() => setModalCompletions(null)} />}
+            {error && <p className="error-message global-error">{error}</p>}
         </div>
     );
 }

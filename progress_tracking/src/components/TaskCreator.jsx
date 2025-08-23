@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
-function TaskCreator({ onTaskCreate }) {
+// Accept a new 'disabled' prop
+function TaskCreator({ onTaskCreate, disabled }) {
     const [taskName, setTaskName] = useState('');
 
     const handleSubmit = (e) => {
@@ -21,10 +22,12 @@ function TaskCreator({ onTaskCreate }) {
                     type="text"
                     value={taskName}
                     onChange={(e) => setTaskName(e.target.value)}
-                    placeholder="e.g., Go to the Gym"
+                    placeholder={disabled ? "Authenticating..." : "e.g., Go to the Gym"}
                     className="task-form__input"
+                    // Disable the input while the app is not ready
+                    disabled={disabled}
                 />
-                <button type="submit" className="task-form__button">
+                <button type="submit" className="task-form__button" disabled={disabled}>
                     Add Task
                 </button>
             </form>

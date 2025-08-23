@@ -336,3 +336,345 @@ body {
     width: 67%;
   }
 }
+
+.heatmap-day-cell {
+    position: relative;
+    cursor: pointer;
+}
+
+.heatmap-day-image {
+    pointer-events: none; /* Allows tooltip to trigger from the rect below */
+}
+
+/* Make the color overlay semi-transparent on hover to see the image better */
+.heatmap-day-cell:hover rect {
+    opacity: 0.6;
+}
+
+/* Update the overlay to use flexbox */
+.task-gallery__overlay {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.task-gallery__info {
+  /* Takes up the remaining space */
+  flex-grow: 1;
+  /* Prevents text from overflowing */
+  min-width: 0;
+}
+
+/* Container for the new buttons */
+.task-gallery__actions {
+  display: flex;
+  gap: 0.5rem;
+  /* Prevents buttons from shrinking */
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+/* Individual button styles */
+.task-gallery__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%; /* Makes them circular */
+  border: none;
+  cursor: pointer;
+  background-color: rgba(40, 40, 40, 0.7);
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.task-gallery__button:hover {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.task-gallery__button.download:hover {
+  color: #22d3ee; /* Cyan */
+}
+
+.task-gallery__button.delete:hover {
+  color: #f87171; /* Red */
+}
+
+/* Calendar Navigation Header */
+.calendar-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+}
+.calendar-main-header .card-title {
+  border-bottom: none;
+  margin-bottom: 0;
+  text-align: center;
+}
+.calendar-main-header button {
+  background: #374151;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.calendar-main-header button:hover {
+  background: #4b5563;
+}
+
+/* Calendar Grid */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+.calendar-header {
+  text-align: center;
+  font-weight: bold;
+  color: #9ca3af;
+  padding-bottom: 0.5rem;
+  font-size: 0.8rem;
+}
+.calendar-day {
+  position: relative;
+  aspect-ratio: 1 / 1; /* Makes the cells square */
+  background-color: #374151;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d1d5db;
+}
+.calendar-day.blank {
+  background-color: transparent;
+}
+.calendar-day.has-completion {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.calendar-day.has-completion:hover {
+  transform: scale(1.05);
+  border: 2px solid #22d3ee;
+}
+.day-number {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 0.7rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 2px 4px;
+  border-radius: 0.25rem;
+  z-index: 2;
+}
+.day-thumbnail {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.375rem;
+  z-index: 1;
+  opacity: 0.7;
+}
+
+/* Modal Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background-color: #1f2937;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.modal-close-button {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+}
+.modal-scroll-area {
+  overflow-y: auto;
+  margin-top: 1rem;
+}
+.modal-completion-item {
+  margin-bottom: 1.5rem;
+}
+.modal-completion-item img {
+  width: 100%;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.modal-completion-item p {
+  margin: 0;
+  color: #d1d5db;
+}
+
+/* Auth Form Container */
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+}
+.auth-toggle-button {
+  background: none;
+  border: none;
+  color: #22d3ee;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin-top: 1rem;
+  width: 100%;
+  text-align: center;
+}
+.auth-toggle-button:hover {
+  text-decoration: underline;
+}
+
+/* Header Styles */
+.header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #d1d5db;
+}
+.sign-out-button {
+  background-color: #4b5563;
+  border: none;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.sign-out-button:hover {
+  background-color: #6b7280;
+}
+
+/* Global Error Message */
+.global-error {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ef4444;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Loading Screen */
+.loading-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-size: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .header-content {
+        flex-direction: row;
+    }
+}
+
+/* Separator Style */
+.separator {
+  text-align: center;
+  margin: 1rem 0;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+/* Google Sign-In Button */
+.google-signin-button {
+  width: 100%;
+  background-color: #ffffff;
+  color: #333;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem; /* Space between logo and text */
+}
+
+.google-signin-button:hover {
+  background-color: #f2f2f2;
+}
+
+.google-signin-button:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+/* Share Button on Task List */
+.task-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.share-button {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.share-button:hover {
+  color: #22d3ee;
+  background-color: #374151;
+}
+
+/* Public View Layout */
+.public-view-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
