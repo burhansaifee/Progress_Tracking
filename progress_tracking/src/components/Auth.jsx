@@ -1,17 +1,33 @@
 import React, { useState } from 'react';
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
+import {
+    getAuth,
+    createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
-    GoogleAuthProvider, // Import GoogleAuthProvider
-    signInWithPopup     // Import signInWithPopup
+    GoogleAuthProvider,
+    signInWithPopup
 } from 'firebase/auth';
+import { db } from '../firebase/config';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+
 
 function Auth({ setError }) {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+
+    // Function to create a user document in Firestore
+    const createUserProfileDocument = async (user) => {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (!userDoc.exists()) {
+            await setDoc(userDocRef, {
+                email: user.email,
+                createdAt: new Date()
+            });
+        }
+    };
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -23,7 +39,8 @@ function Auth({ setError }) {
             if (isLogin) {
                 await signInWithEmailAndPassword(auth, email, password);
             } else {
-                await createUserWithEmailAndPassword(auth, email, password);
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await createUserProfileDocument(userCredential.user);
             }
         } catch (error) {
             setError(error.message);
@@ -32,20 +49,21 @@ function Auth({ setError }) {
         }
     };
 
-    // **NEW:** Function to handle Google Sign-In
     const handleGoogleSignIn = async () => {
         const auth = getAuth();
         const provider = new GoogleAuthProvider();
         setIsLoading(true);
         setError('');
         try {
-            await signInWithPopup(auth, provider);
+            const result = await signInWithPopup(auth, provider);
+            await createUserProfileDocument(result.user);
         } catch (error) {
             setError(error.message);
         } finally {
             setIsLoading(false);
         }
     };
+
 
     return (
         <div className="auth-container">
@@ -81,7 +99,6 @@ function Auth({ setError }) {
                     </div>
                 </form>
 
-                {/* **NEW:** Separator and Google Sign-In Button */}
                 <div className="separator">OR</div>
                 <button onClick={handleGoogleSignIn} disabled={isLoading} className="google-signin-button">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">

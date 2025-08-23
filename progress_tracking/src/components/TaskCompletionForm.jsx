@@ -18,7 +18,7 @@ function TaskCompletionForm({ onAddCompletion, isLoading, error, taskName }) {
 
     return (
         <div className="card task-form">
-            <h2 className="card-title">Log Progress for: {taskName}</h2>
+            <h2 className="card-title"> {taskName}</h2>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label htmlFor="taskDescription">Description (Optional)</label>

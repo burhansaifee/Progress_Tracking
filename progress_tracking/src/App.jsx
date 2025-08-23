@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, deleteDoc, writeBatch, getDocs } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from './firebase/config';
+import {
+    collection, addDoc, onSnapshot, query, where, doc, deleteDoc, writeBatch, getDocs, setDoc, getDoc, updateDoc
+} from 'firebase/firestore';
 import { uploadImage } from './services/imageUploader';
-
 import Auth from './components/Auth';
 import Header from './components/Header';
 import Calendar from './components/Calendar';
@@ -13,7 +14,8 @@ import TaskCreator from './components/TaskCreator';
 import TaskList from './components/TaskList';
 import TaskCompletionForm from './components/TaskCompletionForm';
 import PublicTaskView from './components/PublicTaskView';
-
+import Friends from './components/Friends';
+import FriendProgressView from './components/FriendProgressView';
 import './App.css';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
     const [completions, setCompletions] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
     const [modalCompletions, setModalCompletions] = useState(null);
+    const [friends, setFriends] = useState([]);
+    const [selectedFriend, setSelectedFriend] = useState(null);
 
     // --- Effect 1: Check for Share Link ---
     useEffect(() => {
@@ -51,7 +55,7 @@ function App() {
                         const taskData = taskDoc.data();
                         const completionsSnapshot = await getDocs(completionsCollRef);
                         const completionsData = completionsSnapshot.docs.map(d => ({ ...d.data(), date: d.data().date.toDate() }));
-                        
+
                         setPublicData({ ...taskData, completions: completionsData });
                     } else {
                         setPublicData(null);
@@ -63,7 +67,7 @@ function App() {
                     setIsPublicLoading(false);
                 }
             };
-            
+
             fetchPublicData();
         } else {
             setIsPublicView(false);
@@ -98,7 +102,7 @@ function App() {
         });
         return () => unsubscribe();
     }, [isAuthReady, user, appId]);
-    
+
     // --- Effect 4: Fetch Completions ---
     useEffect(() => {
         if (!user || !selectedTask) {
@@ -117,6 +121,20 @@ function App() {
         });
         return () => unsubscribe();
     }, [user, selectedTask, appId]);
+
+    // --- Effect 5: Fetch Friends ---
+    useEffect(() => {
+        if (!user) {
+            setFriends([]);
+            return;
+        }
+        const friendsPath = `/artifacts/${appId}/users/${user.uid}/friends`;
+        const unsubscribe = onSnapshot(collection(db, friendsPath), (snapshot) => {
+            const friendsList = snapshot.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+            setFriends(friendsList);
+        });
+        return () => unsubscribe();
+    }, [user, appId]);
 
     // --- Handler Functions ---
     const handleCreateTask = async (taskName) => {
@@ -138,7 +156,7 @@ function App() {
                 imageUrl: imageUrl,
                 date: new Date(),
             });
-        } catch (err) { setError(`Failed to log completion: ${err.message}`); } 
+        } catch (err) { setError(`Failed to log completion: ${err.message}`); }
         finally { setIsLoading(false); }
     };
 
@@ -173,10 +191,88 @@ function App() {
         }
     };
 
+     const handleAddFriend = async (friendEmail, nickname) => {
+        if (!user || user.email === friendEmail) {
+            setError("Cannot add yourself as a friend.");
+            return;
+        }
+
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where("email", "==", friendEmail));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            setError("User with that email does not exist.");
+            return;
+        }
+
+        const friendDoc = querySnapshot.docs[0];
+        const friendUid = friendDoc.id;
+
+        const friendData = { email: friendEmail };
+        if (nickname) {
+            friendData.nickname = nickname;
+        }
+        const friendRef = doc(db, `/artifacts/${appId}/users/${user.uid}/friends`, friendUid);
+        await setDoc(friendRef, friendData);
+
+        const currentUserAsFriendRef = doc(db, `/artifacts/${appId}/users/${friendUid}/friends`, user.uid);
+        await setDoc(currentUserAsFriendRef, { email: user.email });
+
+        alert("Friend added!");
+    };
+
+    const handleUpdateFriendNickname = async (friendUid, newNickname) => {
+        if (!user) return;
+        const friendRef = doc(db, `/artifacts/${appId}/users/${user.uid}/friends`, friendUid);
+        await updateDoc(friendRef, {
+            nickname: newNickname
+        });
+    };
+
+    const handleDeleteFriend = async (friendUid) => {
+        if (!user) return;
+        // Remove friend from current user's list
+        const friendRef = doc(db, `/artifacts/${appId}/users/${user.uid}/friends`, friendUid);
+        await deleteDoc(friendRef);
+
+        // Remove current user from friend's list
+        const currentUserAsFriendRef = doc(db, `/artifacts/${appId}/users/${friendUid}/friends`, user.uid);
+        await deleteDoc(currentUserAsFriendRef);
+
+        alert("Friend removed.");
+    };
+
+    const handleDeleteTask = async (taskId) => {
+        if (!user) return;
+
+        // 1. Delete the task definition
+        const taskDefRef = doc(db, `/artifacts/${appId}/users/${user.uid}/taskDefinitions`, taskId);
+        await deleteDoc(taskDefRef);
+
+        // 2. Delete all completions associated with the task
+        const completionsPath = `/artifacts/${appId}/users/${user.uid}/tasks`;
+        const q = query(collection(db, completionsPath), where('taskDefinitionId', '==', taskId));
+        const completionsSnapshot = await getDocs(q);
+        const batch = writeBatch(db);
+        completionsSnapshot.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+
+        // 3. If the deleted task was the selected task, clear the selection
+        if (selectedTask && selectedTask.id === taskId) {
+            setSelectedTask(null);
+        }
+
+        alert("Task deleted successfully.");
+    };
+
+
     const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
     const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
-    // --- **FIXED** Render Logic ---
+    // --- Render Logic ---
     if (isPublicView) {
         if (isPublicLoading) {
             return <div className="loading-screen">Loading Shared Progress...</div>;
@@ -193,20 +289,33 @@ function App() {
             {!user ? ( <Auth setError={setError} /> ) : (
                 <>
                     <Header user={user} />
+                     {selectedFriend ? (
+                        <FriendProgressView friend={selectedFriend} onBack={() => setSelectedFriend(null)} />
+                    ) : (
                     <main className="main-content-split">
+
                         <aside className="sidebar">
                             <TaskCreator onTaskCreate={handleCreateTask} />
-                            <TaskList 
-                                tasks={taskDefinitions} 
-                                onSelectTask={setSelectedTask} 
+                            <TaskList
+                                tasks={taskDefinitions}
+                                onSelectTask={setSelectedTask}
                                 selectedTaskId={selectedTask?.id}
                                 onShareTask={handleShareTask}
+                                onDeleteTask={handleDeleteTask}
+                            />
+                            <Friends
+                                friends={friends}
+                                onAddFriend={handleAddFriend}
+                                onSelectFriend={setSelectedFriend}
+                                selectedFriendId={selectedFriend?.uid}
+                                onUpdateNickname={handleUpdateFriendNickname}
+                                onDeleteFriend={handleDeleteFriend}
                             />
                         </aside>
                         <section className="task-detail-view">
                             {selectedTask ? (
                                 <>
-                                    <TaskCompletionForm 
+                                    <TaskCompletionForm
                                         onAddCompletion={handleAddCompletion}
                                         isLoading={isLoading}
                                         error={error}
@@ -226,9 +335,9 @@ function App() {
                                             onDayClick={setModalCompletions}
                                         />
                                     </div>
-                                    <TaskGallery 
-                                        tasks={completions} 
-                                        onDeleteCompletion={handleDeleteCompletion} 
+                                    <TaskGallery
+                                        tasks={completions}
+                                        onDeleteCompletion={handleDeleteCompletion}
                                     />
                                 </>
                             ) : (
@@ -239,11 +348,12 @@ function App() {
                             )}
                         </section>
                     </main>
+                     )}
                 </>
             )}
-            
+
             {user && <Modal completions={modalCompletions} onClose={() => setModalCompletions(null)} />}
-            {error && <p className="error-message global-error">{error}</p>}
+            {error && <p className="error-message global-error" onClick={() => setError('')}>{error}</p>}
         </div>
     );
 }
