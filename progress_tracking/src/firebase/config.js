@@ -3,13 +3,13 @@ import { getFirestore } from 'firebase/firestore';
 
 // YOUR WEB APP'S FIREBASE CONFIGURATION
 const firebaseConfig = {
-  apiKey: "AIzaSyB5qitSPyfY7s6e1hL8_ql6fr-9LXsQDeg",
-  authDomain: "progress-tracker-7d02d.firebaseapp.com",
-  projectId: "progress-tracker-7d02d",
-  storageBucket: "progress-tracker-7d02d.firebasestorage.app",
-  messagingSenderId: "876459762554",
-  appId: "1:876459762554:web:4d0124f2bbdb6905172cc3",
-  measurementId: "G-VCEZHF9X0P"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // INITIALIZE FIREBASE
