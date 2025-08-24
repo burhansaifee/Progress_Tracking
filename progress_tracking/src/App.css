@@ -212,50 +212,6 @@ body {
   padding: 2rem 0; /* py-8 */
 }
 
-/* Calendar Heatmap Styles */
-.heatmap-container {
-  overflow-x: auto;
-}
-.color-github-0, .color-empty { fill: #2d333b; }
-.color-github-1 { fill: #0e4429; }
-.color-github-2 { fill: #006d32; }
-.color-github-3 { fill: #26a641; }
-.color-github-4 { fill: #39d353; }
-
-
-/* Responsive Media Queries */
-@media (min-width: 640px) { /* sm breakpoint */
-  .task-gallery__grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (min-width: 768px) { /* md breakpoint */
-  .task-gallery__grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 1024px) { /* lg breakpoint */
-  .app-header h1 {
-    font-size: 3rem; /* sm:text-5xl */
-  }
-  .main-content {
-    flex-direction: row;
-  }
-  .main-content__form {
-    flex: 1;
-  }
-  .main-content__heatmap {
-    flex: 2;
-  }
-  .task-gallery__grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-}
-
-
-
 /* New Main Layout */
 .main-content-split {
   display: flex;
@@ -567,24 +523,83 @@ body {
   gap: 1rem;
   margin-bottom: 0.5rem;
 }
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  font-size: 0.9rem;
-  color: #d1d5db;
+
+.user-info-container {
+    position: relative;
+    display: inline-block;
 }
+
+.user-avatar-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.user-avatar-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #4b5563;
+}
+
+.user-menu {
+    position: absolute;
+    top: 55px; /* Position below the avatar */
+    right: 0;
+    width: 300px;
+    background-color: #2d3748;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #4b5563;
+}
+
+.user-menu-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid #4b5563;
+}
+
+.user-avatar-image-large {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 12px;
+}
+
+.user-email {
+    font-weight: 500;
+    color: #e5e7eb;
+}
+
 .sign-out-button {
-  background-color: #4b5563;
-  border: none;
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
+    background-color: transparent;
+    border: 1px solid #4b5563;
+    color: #e5e7eb;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
+
 .sign-out-button:hover {
-  background-color: #6b7280;
+    background-color: #4b5563;
+}
+
+.sign-out-icon {
+    width: 16px;
+    height: 16px;
 }
 
 /* Global Error Message */
