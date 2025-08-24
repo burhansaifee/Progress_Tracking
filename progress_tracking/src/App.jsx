@@ -17,10 +17,15 @@ import PublicTaskView from './components/PublicTaskView';
 import Friends from './components/Friends';
 import FriendProgressView from './components/FriendProgressView';
 import ShareTaskModal from './components/ShareTaskModal';
+import StatsPage from './components/StatsPage';
+import CurrentStreak from './components/CurrentStreak';
+import ProfilePage from './components/ProfilePage';
 import './App.css';
 
 function App() {
     // --- State Management ---
+    const [currentPage, setCurrentPage] = useState('home'); // 'home', 'stats', 'profile'
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
     const [isPublicView, setIsPublicView] = useState(false);
     const [publicData, setPublicData] = useState(null);
     const [isPublicLoading, setIsPublicLoading] = useState(true);
@@ -38,7 +43,13 @@ function App() {
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [sharingTask, setSharingTask] = useState(null);
 
-    // --- Effect 1: Check for Share Link ---
+    // --- Effect for Theme ---
+    useEffect(() => {
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    // --- Effect: Check for Share Link ---
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const shareId = urlParams.get('shareId');
@@ -234,11 +245,9 @@ function App() {
 
     const handleDeleteFriend = async (friendUid) => {
         if (!user) return;
-        // Remove friend from current user's list
         const friendRef = doc(db, `/artifacts/${appId}/users/${user.uid}/friends`, friendUid);
         await deleteDoc(friendRef);
 
-        // Remove current user from friend's list
         const currentUserAsFriendRef = doc(db, `/artifacts/${appId}/users/${friendUid}/friends`, user.uid);
         await deleteDoc(currentUserAsFriendRef);
 
@@ -248,11 +257,9 @@ function App() {
     const handleDeleteTask = async (taskId) => {
         if (!user) return;
 
-        // 1. Delete the task definition
         const taskDefRef = doc(db, `/artifacts/${appId}/users/${user.uid}/taskDefinitions`, taskId);
         await deleteDoc(taskDefRef);
 
-        // 2. Delete all completions associated with the task
         const completionsPath = `/artifacts/${appId}/users/${user.uid}/tasks`;
         const q = query(collection(db, completionsPath), where('taskDefinitionId', '==', taskId));
         const completionsSnapshot = await getDocs(q);
@@ -262,7 +269,6 @@ function App() {
         });
         await batch.commit();
 
-        // 3. If the deleted task was the selected task, clear the selection
         if (selectedTask && selectedTask.id === taskId) {
             setSelectedTask(null);
         }
@@ -287,9 +293,9 @@ function App() {
         alert(`Task shared with ${friendUids.length} friend(s).`);
     };
 
-
     const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
     const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    const handleNavigate = (page) => setCurrentPage(page);
 
     // --- Render Logic ---
     if (isPublicView) {
@@ -303,16 +309,41 @@ function App() {
         return <div className="loading-screen">Loading TaskFlow...</div>;
     }
 
-    return (
-        <div className="app-container">
-            {!user ? ( <Auth setError={setError} /> ) : (
-                <>
-                    <Header user={user} />
-                     {selectedFriend ? (
-                        <FriendProgressView friend={selectedFriend} onBack={() => setSelectedFriend(null)} currentUserId={user.uid} />
-                    ) : (
+    const renderPage = () => {
+        switch (currentPage) {
+            case 'profile':
+                return (
+                    <ProfilePage
+                        user={user}
+                        friends={friends}
+                        onAddFriend={handleAddFriend}
+                        onUpdateNickname={handleUpdateFriendNickname}
+                        onDeleteFriend={handleDeleteFriend}
+                        currentTheme={theme}
+                        onThemeChange={setTheme}
+                        onBack={() => handleNavigate('home')}
+                    />
+                );
+            case 'stats':
+                if (selectedTask) {
+                    return (
+                        <StatsPage
+                            completions={completions}
+                            task={selectedTask}
+                            onBack={() => handleNavigate('home')}
+                        />
+                    );
+                }
+                // Fallback if no task is selected
+                setCurrentPage('home');
+                return null;
+            case 'home':
+            default:
+                if (selectedFriend) {
+                    return <FriendProgressView friend={selectedFriend} onBack={() => setSelectedFriend(null)} currentUserId={user.uid} />;
+                }
+                return (
                     <main className="main-content-split">
-
                         <aside className="sidebar">
                             <TaskCreator onTaskCreate={handleCreateTask} />
                             <TaskList
@@ -322,6 +353,7 @@ function App() {
                                 onShareTask={handleShareTask}
                                 onDeleteTask={handleDeleteTask}
                                 onShareWithFriend={(task) => setSharingTask(task)}
+                                onViewStats={() => handleNavigate('stats')}
                             />
                             <Friends
                                 friends={friends}
@@ -331,6 +363,7 @@ function App() {
                                 onUpdateNickname={handleUpdateFriendNickname}
                                 onDeleteFriend={handleDeleteFriend}
                             />
+                            {selectedTask && <CurrentStreak completions={completions} />}
                         </aside>
                         <section className="task-detail-view">
                             {selectedTask ? (
@@ -339,7 +372,7 @@ function App() {
                                         onAddCompletion={handleAddCompletion}
                                         isLoading={isLoading}
                                         error={error}
-                                        taskName={selectedTask.name} 
+                                        taskName={selectedTask.name}
                                     />
                                     <div className="card">
                                         <div className="calendar-main-header">
@@ -368,7 +401,16 @@ function App() {
                             )}
                         </section>
                     </main>
-                     )}
+                );
+        }
+    };
+
+    return (
+        <div className="app-container">
+            {!user ? ( <Auth setError={setError} /> ) : (
+                <>
+                    <Header user={user} onProfileClick={() => handleNavigate('profile')} />
+                    {renderPage()}
                 </>
             )}
 

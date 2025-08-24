@@ -1,7 +1,7 @@
 import React from 'react';
 
 // Add onShareWithFriend prop
-function TaskList({ tasks, onSelectTask, selectedTaskId, onShareTask, onDeleteTask, onShareWithFriend }) {
+function TaskList({ tasks, onSelectTask, selectedTaskId, onShareTask, onDeleteTask, onShareWithFriend, onViewStats }) {
     return (
         <div className="card">
             <h2 className="card-title">Your Tasks</h2>
@@ -28,6 +28,19 @@ function TaskList({ tasks, onSelectTask, selectedTaskId, onShareTask, onDeleteTa
                                 </svg>
                             </button>
                             {selectedTaskId === task.id && (
+                                <>
+                                 <button
+                                    className="share-button"
+                                    title="View Stats"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onViewStats(task);
+                                    }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M11 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v12h.5a.5.5 0 0 1 0 1H.5a.5.5 0 0 1 0-1H1v-3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v3h1V7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v7h1V2zm1 12h2V2h-2v12zm-3 0V7H7v7h2zm-4 0V9H2v5h2z"/>
+                                    </svg>
+                                </button>
                                 <button
                                     className="share-button"
                                     title="Share this task via link"
@@ -41,6 +54,7 @@ function TaskList({ tasks, onSelectTask, selectedTaskId, onShareTask, onDeleteTa
                                         <path d="M6.586 4.672A3 3 0 0 0 7.414 9.5l.775-.776a2 2 0 0 1-.896-3.346L9.12 3.55a2 2 0 1 1 2.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 1 0-4.243-4.243L6.586 4.672z"/>
                                     </svg>
                                 </button>
+                                </>
                             )}
                              <button
                                 className="share-button delete"
