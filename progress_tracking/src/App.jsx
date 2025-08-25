@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { db } from './firebase/config';
+import { db, messaging } from './firebase/config'; 
+import { getToken } from 'firebase/messaging'; 
 import {
     collection, addDoc, onSnapshot, query, where, doc, deleteDoc, writeBatch, getDocs, setDoc, getDoc, updateDoc, arrayUnion
 } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { uploadImage } from './services/imageUploader';
+import { checkAchievements, ALL_ACHIEVEMENTS } from './utils/achievements';
 import Auth from './components/Auth';
 import Header from './components/Header';
 import Calendar from './components/Calendar';
@@ -42,6 +44,10 @@ function App() {
     const [friends, setFriends] = useState([]);
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [sharingTask, setSharingTask] = useState(null);
+    const [achievements, setAchievements] = useState([]);
+    const [newAchievement, setNewAchievement] = useState(null);
+    const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
+
 
     // --- Effect for Theme ---
     useEffect(() => {
@@ -116,7 +122,7 @@ function App() {
         return () => unsubscribe();
     }, [isAuthReady, user, appId]);
 
-    // --- Effect 4: Fetch Completions ---
+    // --- Effect 4: Fetch Completions & Check Achievements ---
     useEffect(() => {
         if (!user || !selectedTask) {
             setCompletions([]);
@@ -131,9 +137,23 @@ function App() {
                 date: doc.data().date.toDate()
             }));
             setCompletions(fetchedCompletions);
+
+            // Check for new achievements
+            const newlyUnlocked = checkAchievements(fetchedCompletions);
+            const currentAchievementIds = new Set(achievements.map(a => a.id));
+
+            newlyUnlocked.forEach(unlocked => {
+                if (!currentAchievementIds.has(unlocked.id)) {
+                    setAchievements(prev => [...prev, unlocked]);
+                    setNewAchievement(unlocked); // Trigger notification
+                    // Optional: Save achievements to Firestore
+                    const achievementRef = doc(db, `/artifacts/${appId}/users/${user.uid}/achievements`, unlocked.id);
+                    setDoc(achievementRef, unlocked);
+                }
+            });
         });
         return () => unsubscribe();
-    }, [user, selectedTask, appId]);
+    }, [user, selectedTask, appId, achievements]);
 
     // --- Effect 5: Fetch Friends ---
     useEffect(() => {
@@ -148,6 +168,34 @@ function App() {
         });
         return () => unsubscribe();
     }, [user, appId]);
+    
+    // --- Effect 6: Fetch Achievements ---
+    useEffect(() => {
+        if (!user) {
+            setAchievements([]);
+            return;
+        }
+        const achievementsPath = `/artifacts/${appId}/users/${user.uid}/achievements`;
+        const unsubscribe = onSnapshot(collection(db, achievementsPath), (snapshot) => {
+            const fetchedAchievements = snapshot.docs.map(doc => doc.data());
+            setAchievements(fetchedAchievements);
+        });
+        return () => unsubscribe();
+    }, [user, appId]);
+    
+     // --- Effect 7: Check Notification Status ---
+    useEffect(() => {
+        if (!user) return;
+        const userDocRef = doc(db, "users", user.uid);
+        const unsubscribe = onSnapshot(userDocRef, (doc) => {
+            if (doc.exists() && doc.data().fcmToken) {
+                setIsNotificationsEnabled(true);
+            } else {
+                setIsNotificationsEnabled(false);
+            }
+        });
+        return () => unsubscribe();
+    }, [user]);
 
 
     // --- Handler Functions ---
@@ -293,6 +341,29 @@ function App() {
         }
         alert(`Task shared with ${friendUids.length} friend(s).`);
     };
+    
+    const handleEnableReminders = async () => {
+        if (!user) return;
+
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const currentToken = await getToken(messaging, { vapidKey: 'BMmwZI8SaVo9M6rkxOOZDtko8rb9PuEAZI678WE-aMW_xMpZKLJFmODj-4J4LsDE3VIdO3Vw6QYH3-WWFZfoCwo' });
+                if (currentToken) {
+                    const userDocRef = doc(db, "users", user.uid);
+                    await updateDoc(userDocRef, { fcmToken: currentToken });
+                    alert("Notifications have been enabled!");
+                } else {
+                    alert('No registration token available. Request permission to generate one.');
+                }
+            } else {
+                alert("You've blocked notifications. Please enable them in your browser settings.");
+            }
+        } catch (error) {
+            console.error('An error occurred while enabling notifications: ', error);
+            setError("Failed to enable notifications. Please try again.");
+        }
+    };
 
     const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
     const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
@@ -323,6 +394,9 @@ function App() {
                         currentTheme={theme}
                         onThemeChange={setTheme}
                         onBack={() => handleNavigate('home')}
+                        achievements={achievements}
+                        onEnableReminders={handleEnableReminders}
+                        isNotificationsEnabled={isNotificationsEnabled}
                     />
                 );
             case 'stats':
@@ -413,6 +487,16 @@ function App() {
                     <Header user={user} onProfileClick={() => handleNavigate('profile')} />
                     {renderPage()}
                 </>
+            )}
+            
+            {newAchievement && (
+                <div className="achievement-toast" onAnimationEnd={() => setNewAchievement(null)}>
+                    <div className="achievement-toast-emoji">{newAchievement.emoji}</div>
+                    <div className="achievement-toast-text">
+                        <strong>Achievement Unlocked!</strong>
+                        <p>{newAchievement.name}</p>
+                    </div>
+                </div>
             )}
 
             {user && <Modal completions={modalCompletions} onClose={() => setModalCompletions(null)} />}

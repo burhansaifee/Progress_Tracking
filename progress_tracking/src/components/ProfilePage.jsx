@@ -1,6 +1,8 @@
 import React from 'react';
 import Friends from './Friends';
 import ThemeSwitcher from './ThemeSwitcher';
+import Achievements from './Achievements';
+import Notifications from './Notifications'; 
 
 function ProfilePage({
     user,
@@ -11,6 +13,9 @@ function ProfilePage({
     currentTheme,
     onThemeChange,
     onBack,
+    achievements,
+    onEnableReminders,
+    isNotificationsEnabled
 }) {
 
     // Note: Overall stats logic would go here.
@@ -34,6 +39,8 @@ function ProfilePage({
                         </div>
                     </div>
                     <ThemeSwitcher currentTheme={currentTheme} onThemeChange={onThemeChange} />
+                    <Notifications onEnableReminders={onEnableReminders} isNotificationsEnabled={isNotificationsEnabled} />   
+                    <Achievements achievements={achievements} />
                 </aside>
                 <section className="task-detail-view">
                     <Friends

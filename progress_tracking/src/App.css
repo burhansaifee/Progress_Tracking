@@ -914,3 +914,91 @@ body[data-theme='forest'] {
 .auth-toggle-button:hover {
   text-decoration: underline;
 }
+
+/*===============================================
+  12. ACHIEVEMENTS
+===============================================*/
+
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 1rem;
+    padding-top: 1rem;
+}
+
+.achievement-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    cursor: help;
+}
+
+.achievement-emoji {
+    font-size: 2.5rem;
+    line-height: 1;
+    filter: grayscale(1);
+    transition: all 0.3s ease;
+}
+
+.achievement-item:hover .achievement-emoji {
+    filter: grayscale(0);
+    transform: scale(1.2);
+}
+
+.achievement-name {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+}
+
+/* Achievement Unlocked Toast */
+@keyframes slideInAndOut {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    15% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    85% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+}
+
+.achievement-toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--accent-primary);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    animation: slideInAndOut 4s ease-in-out forwards;
+}
+
+.achievement-toast-emoji {
+    font-size: 2rem;
+}
+
+.achievement-toast-text strong {
+    font-weight: 700;
+    display: block;
+}
+
+.achievement-toast-text p {
+    margin: 0;
+    font-size: 0.9rem;
+}
