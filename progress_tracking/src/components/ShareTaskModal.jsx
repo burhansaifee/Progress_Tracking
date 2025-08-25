@@ -19,23 +19,35 @@ function ShareTaskModal({ friends, task, onShare, onClose }) {
     return (
         <div className="modal-backdrop" onClick={onClose}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close-button" onClick={onClose}>&times;</button>
-                <h2>Share "{task.name}" with:</h2>
-                <div className="modal-scroll-area">
-                    {friends.map(friend => (
-                        <div key={friend.uid} className="form-group">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={selectedFriends.includes(friend.uid)}
-                                    onChange={() => handleFriendToggle(friend.uid)}
-                                />
-                                {friend.nickname || friend.email}
-                            </label>
-                        </div>
-                    ))}
+                <div className="modal-header">
+                    <h2 className="modal-title">Share "{task.name}" with friends</h2>
+                    <button className="modal-close-button" onClick={onClose}>&times;</button>
                 </div>
-                <button onClick={handleShare} className="task-form__button" style={{marginTop: '1rem'}}>Share</button>
+                <div className="modal-body">
+                    {friends.length > 0 ? (
+                        <ul className="friend-share-list">
+                            {friends.map(friend => (
+                                <li key={friend.uid} className="friend-share-item">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedFriends.includes(friend.uid)}
+                                            onChange={() => handleFriendToggle(friend.uid)}
+                                        />
+                                        <span>{friend.nickname || friend.email}</span>
+                                    </label>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>You don't have any friends to share with yet.</p>
+                    )}
+                </div>
+                <div className="modal-footer">
+                    <button onClick={handleShare} className="task-form__button" disabled={selectedFriends.length === 0}>
+                        Share with {selectedFriends.length} friend(s)
+                    </button>
+                </div>
             </div>
         </div>
     );
