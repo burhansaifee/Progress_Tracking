@@ -32,7 +32,6 @@ function Calendar({ completions, onDayClick, currentDate }) {
         const date = new Date(year, month, day);
         const dateString = date.toDateString();
         const dayCompletions = completionsByDate.get(dateString) || [];
-        const firstImage = dayCompletions[0]?.imageUrl;
 
         calendarDays.push(
             <div 
@@ -41,8 +40,8 @@ function Calendar({ completions, onDayClick, currentDate }) {
                 onClick={() => dayCompletions.length > 0 && onDayClick(dayCompletions)}
             >
                 <div className="day-number">{day}</div>
-                {firstImage && (
-                    <img src={firstImage} alt="Task completion" className="day-thumbnail" />
+                {dayCompletions.length > 0 && (
+                    <div className="completions-indicator">{dayCompletions.length}</div>
                 )}
             </div>
         );

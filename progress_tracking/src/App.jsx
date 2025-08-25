@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { db } from './firebase/config';
+import { db, messaging } from './firebase/config'; 
+import { getToken } from 'firebase/messaging'; 
 import {
     collection, addDoc, onSnapshot, query, where, doc, deleteDoc, writeBatch, getDocs, setDoc, getDoc, updateDoc, arrayUnion
 } from 'firebase/firestore';
@@ -42,6 +42,7 @@ function App() {
     const [friends, setFriends] = useState([]);
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [sharingTask, setSharingTask] = useState(null);
+    const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(false);
 
     // --- Effect for Theme ---
     useEffect(() => {
@@ -148,6 +149,20 @@ function App() {
         });
         return () => unsubscribe();
     }, [user, appId]);
+         // --- Effect 6: Check Notification Status ---
+    useEffect(() => {
+        if (!user) return;
+        const userDocRef = doc(db, "users", user.uid);
+        const unsubscribe = onSnapshot(userDocRef, (doc) => {
+            if (doc.exists() && doc.data().fcmToken) {
+                setIsNotificationsEnabled(true);
+            } else {
+                setIsNotificationsEnabled(false);
+            }
+        });
+        return () => unsubscribe();
+    }, [user]);
+
 
     // --- Handler Functions ---
     const handleCreateTask = async (taskName) => {
@@ -293,6 +308,29 @@ function App() {
         alert(`Task shared with ${friendUids.length} friend(s).`);
     };
 
+    const handleEnableReminders = async () => {
+        if (!user) return;
+
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                const currentToken = await getToken(messaging, { vapidKey: 'YOUR_VAPID_KEY_FROM_FIREBASE_CONSOLE' });
+                if (currentToken) {
+                    const userDocRef = doc(db, "users", user.uid);
+                    await updateDoc(userDocRef, { fcmToken: currentToken });
+                    alert("Notifications have been enabled!");
+                } else {
+                    alert('No registration token available. Request permission to generate one.');
+                }
+            } else {
+                alert("You've blocked notifications. Please enable them in your browser settings.");
+            }
+        } catch (error) {
+            console.error('An error occurred while enabling notifications: ', error);
+            setError("Failed to enable notifications. Please try again.");
+        }
+    };
+
     const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
     const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
     const handleNavigate = (page) => setCurrentPage(page);
@@ -322,6 +360,8 @@ function App() {
                         currentTheme={theme}
                         onThemeChange={setTheme}
                         onBack={() => handleNavigate('home')}
+                         onEnableReminders={handleEnableReminders}
+                         isNotificationsEnabled={isNotificationsEnabled}
                     />
                 );
             case 'stats':

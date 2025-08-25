@@ -9,9 +9,11 @@ function Modal({ completions, onClose }) {
     return (
         <div className="modal-backdrop" onClick={onClose}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close-button" onClick={onClose}>&times;</button>
-                <h2>Completions for {formatDate(completions[0].date)}</h2>
-                <div className="modal-scroll-area">
+                 <div className="modal-header">
+                    <h2 className="modal-title">Completions for {formatDate(completions[0].date)}</h2>
+                    <button className="modal-close-button" onClick={onClose}>&times;</button>
+                </div>
+                <div className="modal-body">
                     {completions.map(completion => (
                         <div key={completion.id} className="modal-completion-item">
                             <img src={completion.imageUrl} alt={completion.description || 'Completion'} />

@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Notifications() {
+function Notifications({ onEnableReminders, isNotificationsEnabled }) {
     return (
         <div className="card">
             <h2 className="card-title">Notifications</h2>
@@ -8,9 +8,10 @@ function Notifications() {
                 <p>Enable daily email reminders to complete your tasks.</p>
                 <button
                     className="task-form__button"
-                    onClick={() => alert('This feature requires backend setup!')}
+                    onClick={onEnableReminders}
+                    disabled={isNotificationsEnabled}
                 >
-                    Enable Reminders
+                    {isNotificationsEnabled ? "Reminders Enabled" : "Enable Reminders"}
                 </button>
             </div>
         </div>

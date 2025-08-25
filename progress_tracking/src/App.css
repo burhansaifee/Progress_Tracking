@@ -1,3 +1,7 @@
+/*===============================================
+  1. GENERAL & THEME VARIABLES
+===============================================*/
+
 /* General Body & App Layout with CSS Variables for Theming */
 body {
   --bg-primary: #111827;      /* bg-gray-900 */
@@ -33,7 +37,6 @@ body[data-theme='light'] {
   --text-accent: #0891b2;      /* text-cyan-600 */
   --accent-primary: #06b6d4;    /* bg-cyan-500 */
   --accent-hover: #0891b2;      /* hover:bg-cyan-600 */
-  --danger-hover: #ef4444;      /* red-500 */
 }
 
 /* Forest Theme */
@@ -47,8 +50,11 @@ body[data-theme='forest'] {
   --text-accent: #4ade80;      /* text-green-400 */
   --accent-primary: #22c55e;    /* bg-green-500 */
   --accent-hover: #16a34a;      /* hover:bg-green-600 */
-  --danger-hover: #ef4444;      /* red-500 */
 }
+
+/*===============================================
+  2. APP LAYOUT & CONTAINERS
+===============================================*/
 
 .app-container {
   max-width: 72rem;
@@ -58,7 +64,41 @@ body[data-theme='forest'] {
   min-height: 100vh;
 }
 
-/* Header */
+.main-content-split {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.task-detail-view {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.loading-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-size: 1.5rem;
+}
+
+
+/*===============================================
+  3. HEADER & USER MENU
+===============================================*/
+
+.app-header {
+  margin-bottom: 2rem;
+}
+
 .header-content {
     display: flex;
     flex-direction: column;
@@ -67,18 +107,112 @@ body[data-theme='forest'] {
     gap: 1rem;
     margin-bottom: 0.5rem;
 }
+
 .app-header h1 {
   font-size: 2.25rem;
   font-weight: 700;
   color: var(--text-accent);
   margin: 0;
 }
+
 .app-header p {
   color: var(--text-secondary);
   margin-top: 0.5rem;
+  text-align: center;
 }
 
-/* Common Card Styles */
+.user-info-container {
+    position: relative;
+    display: inline-block;
+}
+
+.user-avatar-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 50%;
+}
+
+.user-avatar-image {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border-secondary);
+}
+
+.user-menu {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-secondary);
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 280px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.user-menu-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-primary);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.user-menu-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: transparent;
+  border: none;
+  color: var(--text-primary);
+  padding: 10px 16px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.user-menu-button:hover {
+  background-color: var(--border-primary);
+}
+
+.user-menu-button span {
+  flex-grow: 1;
+}
+
+.sign-out-button {
+  background-color: transparent;
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sign-out-button:hover {
+  background-color: var(--border-secondary);
+}
+
+/*===============================================
+  4. CARD & FORM STYLES
+===============================================*/
+
 .card {
   background-color: var(--bg-secondary);
   padding: 1.5rem;
@@ -86,6 +220,7 @@ body[data-theme='forest'] {
   border: 1px solid var(--border-primary);
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
+
 .card-title {
   font-size: 1.5rem;
   font-weight: 600;
@@ -95,15 +230,16 @@ body[data-theme='forest'] {
   border-bottom: 1px solid var(--border-secondary);
 }
 
-/* Task Form & Inputs */
 .task-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* Add space between form elements */
+  gap: 1rem;
 }
+
 .task-form .form-group {
-  margin-bottom: 0; /* Remove default margin */
+  margin-bottom: 0;
 }
+
 .task-form label {
   display: block;
   font-size: 0.875rem;
@@ -111,31 +247,35 @@ body[data-theme='forest'] {
   color: var(--text-primary);
   margin-bottom: 0.5rem;
 }
+
 .task-form__input {
   width: 100%;
   background-color: var(--border-primary);
   border: 1px solid var(--border-secondary);
   border-radius: 0.5rem;
-  padding: 0.75rem 1rem; /* Increase padding for better feel */
+  padding: 0.75rem 1rem;
   color: var(--text-primary);
   box-sizing: border-box;
   transition: border-color 0.2s, box-shadow 0.2s;
   font-size: 1rem;
   line-height: 1.5;
 }
+
 .task-form__input::placeholder {
     color: var(--text-secondary);
 }
+
 .task-form__input:focus {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 2px var(--accent-primary);
 }
-/* Style for textarea specifically */
+
 .task-form textarea.task-form__input {
     resize: vertical;
     min-height: 80px;
 }
+
 .task-form__button {
   width: 100%;
   background-color: var(--accent-primary);
@@ -152,38 +292,26 @@ body[data-theme='forest'] {
   height: 48px;
   font-size: 1rem;
 }
+
 .task-form__button:hover {
   background-color: var(--accent-hover);
 }
+
 .task-form__button:disabled {
   background-color: var(--border-secondary);
   cursor: not-allowed;
 }
 
+/*===============================================
+  5. TASK LIST & ACTIONS
+===============================================*/
 
-/* Main Layout */
-.main-content-split {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-.task-detail-view {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-/* Task List */
 .task-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
+
 .task-list__item {
   display: flex;
   justify-content: space-between;
@@ -195,28 +323,31 @@ body[data-theme='forest'] {
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
+
 .task-list__item:hover {
   background-color: var(--border-primary);
 }
+
 .task-list__item.active {
   background-color: var(--accent-primary);
   border-color: var(--text-accent);
   font-weight: 600;
   color: white;
 }
+
 .task-list__empty {
   color: var(--text-secondary);
   text-align: center;
   padding: 1rem;
 }
 
-/* Task Action Buttons (Share, Stats, Delete) */
-.task-gallery__actions {
+.task-list__item .task-gallery__actions {
   display: flex;
   gap: 0.5rem;
   flex-shrink: 0;
   margin-left: 0.5rem;
 }
+
 .share-button {
   background: none;
   border: none;
@@ -229,28 +360,35 @@ body[data-theme='forest'] {
   justify-content: center;
   transition: all 0.2s ease-in-out;
 }
+
 .share-button:hover {
   color: var(--text-primary);
   background-color: var(--border-secondary);
   transform: scale(1.1);
 }
+
 .share-button.delete:hover {
     color: #ffffff;
     background-color: var(--danger-hover);
 }
 
-/* Calendar */
+/*===============================================
+  6. CALENDAR
+===============================================*/
+
 .calendar-main-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding-bottom: 1rem;
 }
+
 .calendar-main-header .card-title {
   border-bottom: none;
   margin-bottom: 0;
   text-align: center;
 }
+
 .calendar-main-header button {
   background: var(--border-primary);
   border: none;
@@ -258,15 +396,19 @@ body[data-theme='forest'] {
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
+
 .calendar-main-header button:hover {
   background: var(--border-secondary);
 }
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 5px;
 }
+
 .calendar-header {
   text-align: center;
   font-weight: bold;
@@ -274,6 +416,7 @@ body[data-theme='forest'] {
   padding-bottom: 0.5rem;
   font-size: 0.8rem;
 }
+
 .calendar-day {
   position: relative;
   aspect-ratio: 1 / 1;
@@ -284,19 +427,136 @@ body[data-theme='forest'] {
   justify-content: center;
   color: var(--text-primary);
 }
+
 .calendar-day.blank {
   background-color: transparent;
 }
+
 .calendar-day.has-completion {
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, border-color 0.2s;
 }
+
 .calendar-day.has-completion:hover {
   transform: scale(1.05);
   border: 2px solid var(--text-accent);
 }
 
-/* Modal */
+.completions-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: var(--accent-primary);
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+/*===============================================
+  7. TASK GALLERY (RECENT COMPLETIONS)
+===============================================*/
+
+.task-gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.task-gallery__item {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+
+.task-gallery__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.task-gallery__item:hover .task-gallery__image {
+  transform: scale(1.1);
+}
+
+.task-gallery__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.75rem;
+}
+
+.task-gallery__item:hover .task-gallery__overlay {
+  opacity: 1;
+}
+
+.task-gallery__info {
+  color: white;
+}
+
+.task-gallery__info .task-name {
+  font-weight: bold;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.task-gallery__info .task-date {
+  font-size: 0.75rem;
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.task-gallery__item .task-gallery__actions {
+  display: flex;
+  gap: 0.5rem;
+  align-self: flex-end;
+}
+
+.task-gallery__button {
+  background-color: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.task-gallery__button:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.task-gallery__button.delete:hover {
+  background-color: var(--danger-hover);
+}
+
+.task-gallery__empty-text {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem;
+}
+
+
+/*===============================================
+  8. MODAL
+===============================================*/
+
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -354,9 +614,22 @@ body[data-theme='forest'] {
   overflow-y: auto;
 }
 
+.modal-completion-item {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.modal-completion-item img {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 .modal-footer {
   padding: 1rem 1.5rem;
   border-top: 1px solid var(--border-primary);
+  margin-top: auto;
 }
 
 .friend-share-list {
@@ -388,19 +661,55 @@ body[data-theme='forest'] {
   height: 1.25rem;
 }
 
-/* Profile Page */
-.profile-page {
+/*===============================================
+  9. PROFILE, STATS & THEME SWITCHER
+===============================================*/
+
+.profile-page, .stats-page {
     width: 100%;
     max-width: 64rem;
     margin: 0 auto;
 }
 
-/* Theme Switcher */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.stat-item h3 {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem 0;
+}
+
+.stat-item p {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--text-accent);
+    margin: 0;
+}
+
+.chart-container {
+    margin-top: 2rem;
+}
+
+.chart-title {
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
 .theme-switcher {
     display: flex;
     gap: 0.5rem;
-    margin-top: 1rem;
 }
+
 .theme-button {
     flex-grow: 1;
     padding: 0.5rem 1rem;
@@ -411,133 +720,21 @@ body[data-theme='forest'] {
     cursor: pointer;
     transition: all 0.2s;
 }
+
 .theme-button:hover {
     border-color: var(--accent-primary);
 }
+
 .theme-button.active {
     background-color: var(--accent-primary);
     color: white;
     font-weight: bold;
 }
 
-/* Stats Page & Component */
-.stats-page {
-    width: 100%;
-    max-width: 64rem;
-    margin: 0 auto;
-}
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-    text-align: center;
-}
-.stat-item h3 {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    margin: 0 0 0.5rem 0;
-}
-.stat-item p {
-    font-size: 2.25rem;
-    font-weight: 700;
-    color: var(--text-accent);
-    margin: 0;
-}
-.chart-container {
-    margin-top: 2rem;
-}
-.chart-title {
-    text-align: center;
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-}
+/*===============================================
+  10. UTILITIES & RESPONSIVE
+===============================================*/
 
-/* --- Auth & User Menu (Google Style) --- */
-.user-info-container {
-    position: relative;
-    display: inline-block;
-}
-.user-avatar-button {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    border-radius: 50%;
-}
-.user-avatar-image {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 2px solid var(--border-secondary);
-}
-.user-menu {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-secondary);
-  position: absolute;
-  top: 55px;
-  right: 0;
-  width: 280px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  padding: 8px 0;
-}
-.user-menu-header {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-primary);
-  text-align: center;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-.user-menu-actions {
-  display: flex;
-  flex-direction: column;
-}
-.user-menu-button {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background-color: transparent;
-  border: none;
-  color: var(--text-primary);
-  padding: 10px 16px;
-  cursor: pointer;
-  text-align: left;
-  font-size: 1rem;
-  transition: background-color 0.2s;
-}
-.user-menu-button:hover {
-  background-color: var(--border-primary);
-}
-.user-menu-button span {
-  flex-grow: 1;
-}
-
-/* --- End Auth & User Menu --- */
-
-.sign-out-button {
-  background-color: transparent;
-  border: 1px solid var(--border-secondary);
-  color: var(--text-primary);
-  padding: 8px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.sign-out-button:hover {
-  background-color: var(--border-secondary);
-}
 .global-error {
   background-color: #ef4444;
   color: white;
@@ -549,29 +746,171 @@ body[data-theme='forest'] {
   border-radius: 0.5rem;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
-.loading-screen {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    font-size: 1.5rem;
+.spinner {
+  animation: spin 1s linear infinite;
+  width: 24px;
+  height: 24px;
 }
-
-/* Responsive Layout */
 @media (min-width: 768px) {
     .header-content {
         flex-direction: row;
     }
+    .app-header p {
+      text-align: left;
+    }
 }
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (min-width: 1024px) {
   .main-content-split {
     flex-direction: row;
+    align-items: flex-start;
   }
   .sidebar {
     width: 33%;
     flex-shrink: 0;
+    position: sticky;
+    top: 1.5rem;
   }
   .task-detail-view {
     width: 67%;
   }
+}
+
+@media (max-width: 767px) {
+  .user-menu {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90vw;
+    max-width: 320px;
+  }
+}
+
+/*===============================================
+  11. AUTHENTICATION
+===============================================*/
+
+.auth-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border-primary);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-header h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+
+.auth-header p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.input-group {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.task-form__input.with-icon {
+    padding-left: 2.5rem;
+}
+
+.separator {
+  text-align: center;
+  margin: 1.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  position: relative;
+}
+
+.separator::before,
+.separator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: calc(50% - 20px);
+  height: 1px;
+  background-color: var(--border-primary);
+}
+
+.separator::before {
+  left: 0;
+}
+
+.separator::after {
+  right: 0;
+}
+
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.google-signin-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-secondary);
+  border-radius: 0.5rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.google-signin-button:hover {
+  background-color: var(--border-primary);
+}
+
+.auth-toggle-button {
+  background: none;
+  border: none;
+  color: var(--text-accent);
+  cursor: pointer;
+  padding: 0.5rem;
+  font-weight: 500;
+}
+
+.auth-toggle-button:hover {
+  text-decoration: underline;
 }

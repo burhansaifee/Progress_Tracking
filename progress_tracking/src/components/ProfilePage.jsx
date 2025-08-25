@@ -11,7 +11,9 @@ function ProfilePage({
     onDeleteFriend,
     currentTheme,
     onThemeChange,
-    onBack
+    onBack,
+    onEnableReminders,
+    isNotificationsEnabled
 }) {
 
     // Note: Overall stats logic would go here.
@@ -35,7 +37,7 @@ function ProfilePage({
                         </div>
                     </div>
                     <ThemeSwitcher currentTheme={currentTheme} onThemeChange={onThemeChange} />
-                    <Notifications />
+                    <Notifications onEnableReminders={onEnableReminders} isNotificationsEnabled={isNotificationsEnabled} />   
                 </aside>
                 <section className="task-detail-view">
                     <Friends
