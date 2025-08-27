@@ -1,6 +1,5 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getMessaging } from 'firebase/messaging';
 
 // YOUR WEB APP'S FIREBASE CONFIGURATION
 const firebaseConfig = {
@@ -16,6 +15,5 @@ const firebaseConfig = {
 // INITIALIZE FIREBASE
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const messaging = getMessaging(app);
 
-export { db, messaging };
+export { db };
